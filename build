@@ -1,0 +1,115 @@
+#!/bin/bash
+# LineageOS build script
+#   2017, Felix Niederwanger <felix@feldspaten.org>
+
+
+
+SYS_DIR="android/system"
+JJ="-j8"		# Number of processes
+FLAVOUR="cm-14.1"	# Witch Android flavour to use. Default: "cm-14.1"
+
+
+
+## Check program parameters
+if [ $# -lt 1 ]; then
+	echo "Missing parameter: Device to build"
+	echo "Usage: $0 DEVICE"
+	exit 1
+fi
+
+for var in "$@"
+do  
+	if [ "$var" = "--help" ] || [ "$var" = "-h" ]; then
+		echo "LineageOS build script"
+		echo "2017 Felix Niederwanger"
+		echo ""
+		echo "Usage: $0 DEVICE|OPTIONS"
+		echo "DEVICE can be: hammerhead, manta, n8000"
+		echo "  or another device, but they are not supported (yet)"
+		echo ""
+		echo "OPTIONS"
+		echo "  -h   --help       Print this help message"
+		echo "  --init            Initialize repository (don't run this on a working repo)"
+		exit 0
+	elif [ "$var" = "--init" ]; then
+		## TODO: Check if repo is already initialized and refuse work if so
+		mkdir -p "$SYS_DIR"
+		cd "$SYS_DIR"
+		echo "Initializing ... "
+		repo init -u https://github.com/LineageOS/android.git -b $(FLAVOUR)
+		if [ $? -ne 0 ]; then
+			echo "Repo init failed."
+			exit 1
+		fi
+		echo "First synchronisation ... "
+		repo sync $JJ 1>/dev/null 2>/dev/null
+		if [ $status -ne 0 ]; then
+			echo "repo sync failed"
+			exit 2
+		fi
+		echo "Repository initialized"
+		exit 0
+	fi
+done
+
+LOGDIR="$PWD/logs"
+TODAY="`date --iso`"
+mkdir -p "$LOGDIR"
+## Sync repositories
+cd "$SYS_DIR"
+if [ $? -ne 0 ]; then
+	echo "Cannot switch to directory $SYS_DIR"
+	exit 1	
+fi
+echo "Synching repositories ... "
+repo sync $JJ 1>/dev/null 2>/dev/null
+status=$?
+if [ $status -ne 0 ]; then
+	echo "repo sync failed"
+	exit 2
+fi
+
+# Setup build environment
+source build/envsetup.sh
+
+# Setup CCache
+export USE_CCACHE=1
+export CCACHE_COMPRESS=1
+
+# Setup android JACK"
+export ANDROID_JACK_VM_ARGS="-Dfile.encoding=UTF-8 -XX:+TieredCompilation -Xmx12G"
+
+## Iterate over devices
+for var in "$@"
+do
+	echo "Building for device $var ... "
+	echo "  Breakfast ... "
+	OUT="${LOGDIR}/breakfast-${TODAY}.out"
+	ERR="${LOGDIR}/breakfast-${TODAY}.err"
+	time breakfast "$var" 1>"$OUT" 2>"$ERR"
+	status=$?
+	if [ $status -ne 0 ]; then
+		echo "Breakfast failed for device $var"
+		echo "Check log files $OUT and $ERR for details"
+		exit 3
+	fi
+	croot
+	if [ $? -ne 0 ]; then
+		echo "Croot failed for device $var"
+		echo "Check log files $OUT and $ERR for details"
+		exit 4
+	fi
+	echo "  Brunch $var - (This is gonna take some time) ... "
+	OUT="${LOGDIR}/brunch-${TODAY}.out"
+	ERR="${LOGDIR}/brunch-${TODAY}.err"
+	time brunch "$var" 1>"$OUT" 2>"$ERR"
+	status=$?
+	if [ $status -ne 0 ]; then
+		echo "Brunch failed for device $var"
+		echo "Check log files $OUT and $ERR for details"
+		exit 5
+	fi
+done
+
+echo "Completed build for $var :-)"
+
