@@ -9,94 +9,109 @@ SYS_DIR="android/system"
 JJ="-j8"		# Number of processes for build
 FLAVOUR="cm-14.1"	# Witch Android flavour to use. Default: "cm-14.1"
 
+DEBIAN_DEPS="bc bison build-essential curl flex g++-multilib gcc-multilib git gnupg gperf imagemagick lib32ncurses5-dev lib32readline-dev lib32z1-dev libesd0-dev liblz4-tool libncurses5-dev libsdl1.2-dev libssl-dev libwxgtk3.0-dev libxml2 libxml2-utils lzop pngcrush rsync schedtool squashfs-tools xsltproc zip zlib1g-dev"
 
+DEBIAN_OLD_DEPS="bc bison build-essential curl flex g++-multilib gcc-multilib git gnupg gperf imagemagick lib32ncurses5-dev lib32readline-dev lib32z1-dev libesd0-dev liblz4-tool libncurses5-dev libsdl1.2-dev libssl-dev libwxgtk2.8-dev libxml2 libxml2-utils lzop pngcrush rsync schedtool squashfs-tools xsltproc zip zlib1g-dev"
 
-## Check program parameters
-if [ $# -lt 1 ]; then
+function checkFirstTime() {
+  [[ -f .lineageBuild ]] && return 0
+  cat <<__EOM
+This appears to be the first time you run this script.
+Use ${0} --init to setup the build system.
+__EOM
+  exit 1
+}
 
-	## Check for init file
-	if [ ! -f .lineageBuild ]; then
-		echo "This appears to be the first time that you run this script"
-		echo "Use $0 --init to setup the system in the first place"
-		exit 1
-	fi
+function usage() {
+  cat <<__EOU
+Usage: ${0} [OPTIONS] DEVICE
 
-	echo "Missing parameter: Device to build"
-	echo "Usage: $0 DEVICE"
-	echo "Type $0 --help if you need help"
-	exit 1
-fi
+DEVICE can be: hammerhead, manta, ...
+  (or another device supported by Lineage)
 
-for var in "$@"
-do  
-	if [ "$var" = "--help" ] || [ "$var" = "-h" ]; then
-		echo "LineageOS build script"
-		echo "2017 Felix Niederwanger"
-		echo ""
-		echo "Usage: $0 DEVICE|OPTIONS"
-		echo "DEVICE can be: hammerhead, manta, ..."
-		echo "  (or another device supported by Lineage)"
-		echo ""
-		echo "OPTIONS"
-		echo "  -h   --help       Print this help message"
-		echo "  --init            Initialize repository (don't run this on a working repo)"
-		echo "  --dependencies    List dependencies (Ubuntu 16.04 and later)"
-		echo "  --inst-dep        Install the dependencies"
-		echo ""
-		echo "I've wrote --inst-dep because I'm lazy. You should list the dependencies and install them manually via apt, apt-get or aptitude"
-		echo "  Never trust a script, especially if it asks for sudo rights ;-)"
-		exit 0
-	elif [ "$var" = "--dependencies" ]; then
-		echo "bc bison build-essential curl flex g++-multilib gcc-multilib git gnupg gperf imagemagick lib32ncurses5-dev lib32readline-dev lib32z1-dev libesd0-dev liblz4-tool libncurses5-dev libsdl1.2-dev libssl-dev libwxgtk3.0-dev libxml2 libxml2-utils lzop pngcrush rsync schedtool squashfs-tools xsltproc zip zlib1g-dev"
-		exit 0
-	elif [ "$var" = "--old-dependencies" ]; then
-		echo "bc bison build-essential curl flex g++-multilib gcc-multilib git gnupg gperf imagemagick lib32ncurses5-dev lib32readline-dev lib32z1-dev libesd0-dev liblz4-tool libncurses5-dev libsdl1.2-dev libssl-dev libwxgtk2.8-dev libxml2 libxml2-utils lzop pngcrush rsync schedtool squashfs-tools xsltproc zip zlib1g-dev"
-		exit 0
-	elif [ "$var" = "--inst-dep" ]; then
-		sudo apt-get install `./$0 --dependencies`
-		exit $?
-	elif [ "$var" = "--init" ]; then
-		## Check if repo is already initialized and refuse work if so
-		if [ -f .lineageBuild ]; then
-			echo "ERROR: This directory appears to be initialized already"
-			echo "  Remove the file .lineageBuild if you want to force a init"
-			echo "Process cancelled."
-			exit 1
-		fi
-		
-		mkdir -p "$SYS_DIR"
-		CUR_DIR="$PWD"
-		cd "$SYS_DIR"
-		echo "Initializing ... "
-		repo init -u https://github.com/LineageOS/android.git -b ${FLAVOUR}
-		if [ $? -ne 0 ]; then
-			echo "Repo init failed."
-			exit 1
-		fi
-		echo "First synchronisation ... "
-		repo sync $JJ 1>/dev/null 2>/dev/null
-		status=$?
-		if [ $status -ne 0 ]; then
-			echo "repo sync failed"
-			exit 2
-		fi
-		echo "Repository initialized"
-		cd "$CUR_DIR"
-		touch .lineageBuild
-		exit 0
-	fi
+OPTIONS
+  -h   --help       Print this help message
+  --init            Initialize repository (don't run this on a working repo)
+  --dependencies    List dependencies (Ubuntu 16.04 and later)
+  --inst-dep        Install the dependencies
+
+I've wrote --inst-dep because I'm lazy. You should list the dependencies and install them manually via apt, apt-get or aptitude
+  Never trust a script, especially if it asks for sudo rights ;-)
+
+LineageOS build script
+2017 Felix Niederwanger
+__EOU
+}
+
+function print_deps() {
+  local old_deps=${1:-0}
+  DEPS="${DEBIAN_DEPS}"
+  [[ ${old_deps} == 1 ]] && DEPS="${DEBIAN_OLD_DEPS}"
+  echo ${DEPS}
+  exit 0
+}
+
+function install_deps() {
+  # XXX lets kick this, it's not safe
+  sudo apt-get install ${DEBIAN_DEPS}
+}
+
+function init_run() {
+
+  ## Check if repo is already initialized and refuse work if so
+  if [[ -f .lineageBuild ]]; then
+          echo "ERROR: This directory appears to be initialized already"
+          echo "Remove the file .lineageBuild if you want to force a init"
+          echo "Process cancelled."
+          return 1
+  fi
+
+  CUR_DIR="$PWD"
+  mkdir -p "$SYS_DIR"
+  cd "$SYS_DIR"
+  echo "Initializing ... "
+  repo init -u https://github.com/LineageOS/android.git -b ${FLAVOUR}
+  status=$?
+  if [ $status -ne 0 ]; then
+          echo "Repo init failed."
+          return 1
+  fi
+  echo "First synchronisation ... "
+  repo sync $JJ 1>/dev/null 2>/dev/null
+  status=$?
+  if [ $status -ne 0 ]; then
+          echo "repo sync failed"
+          return 2
+  fi
+  echo "Repository initialized"
+  cd "$CUR_DIR"
+  touch .lineageBuild
+}
+
+OPTS=`getopt -o h --long init,dependencies,old-dependencies,inst-dep -n 'build' -- "$@"`
+
+if [ ${?} != 0 ]; then usage; exit 1; fi
+eval set -- "${OPTS}"
+
+while true; do
+  case "${1}" in
+    -h | --help) usage; exit 0; shift ;;
+    --dependencies) print_dep ; exit 0; shift ;;
+    --old-dependencies) print_dep 1; exit 0; shift ;;
+    --inst-dep) install_dep; exit ${?}; shift;;
+    --init) init_run; exit ${?}; shift;;
+    --) shift; break;;
+    *) break;;
+  esac
 done
 
-
-
-## Check for init file
-if [ ! -f .lineageBuild ]; then
-	echo "Hi there,"
-	echo "  This appears to be the first time that you run this script"
-	echo "  Use $0 --init to setup the system in the first place."
-	echo "Have fun, phoenix"
-	exit 1
+## Check program parameters
+if [ ${#} -lt 1 ]; then
+  usage
+  exit 1
 fi
+
+checkFirstTime
 
 
 LOGDIR="$PWD/logs"
@@ -156,7 +171,6 @@ do
 		echo "Check log files $OUT and $ERR for details"
 		exit 5
 	fi
+        echo "Completed build for $var :-)"
 done
-
-echo "Completed build for $var :-)"
 
