@@ -17,6 +17,7 @@ The build script is currently hardcoded to only work for 14.1. You can try other
 ## Usage
 
 * Dependencies install
+
 First you need to setup the repository. Type the following to install them directly
 
     ./build --inst-dep
@@ -26,6 +27,7 @@ or the following to list the required dependencies.
     ./build --dependencies
 
 * Repository initialisation
+
 To initialize the repository use the --init command.
 
     ./build --init
@@ -33,6 +35,7 @@ To initialize the repository use the --init command.
 This step should only be done once and the script warns you if you are trying to initialize it again.
 
 * Build for a device (e.g. hammerhead)
+
 To synchronize the repositories and build for hammerhead
 
     ./build hammerhead
