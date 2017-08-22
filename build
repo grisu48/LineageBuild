@@ -8,6 +8,7 @@
 SYS_DIR="android/system"
 JJ="-j8"		# Number of processes for build
 FLAVOUR="cm-14.1"	# Witch Android flavour to use. Default: "cm-14.1"
+SYNC="1"
 
 DEBIAN_DEPS="bc bison build-essential curl flex g++-multilib gcc-multilib git gnupg gperf imagemagick lib32ncurses5-dev lib32readline-dev lib32z1-dev libesd0-dev liblz4-tool libncurses5-dev libsdl1.2-dev libssl-dev libwxgtk3.0-dev libxml2 libxml2-utils lzop pngcrush rsync schedtool squashfs-tools xsltproc zip zlib1g-dev"
 
@@ -34,6 +35,7 @@ OPTIONS
   --init            Initialize repository (don't run this on a working repo)
   --dependencies    List dependencies (Ubuntu 16.04 and later)
   --inst-dep        Install the dependencies
+  --no-sync         Do not sync before building
 
 I've wrote --inst-dep because I'm lazy. You should list the dependencies and install them manually via apt, apt-get or aptitude
   Never trust a script, especially if it asks for sudo rights ;-)
@@ -88,7 +90,7 @@ function init_run() {
   touch .lineageBuild
 }
 
-OPTS=`getopt -o h --long init,dependencies,old-dependencies,inst-dep -n 'build' -- "$@"`
+OPTS=`getopt -o h --long init,dependencies,old-dependencies,inst-dep,no-sync -n 'build' -- "$@"`
 
 if [ ${?} != 0 ]; then usage; exit 1; fi
 eval set -- "${OPTS}"
@@ -100,6 +102,7 @@ while true; do
     --old-dependencies) print_dep 1; exit 0; shift ;;
     --inst-dep) install_dep; exit ${?}; shift;;
     --init) init_run; exit ${?}; shift;;
+    --no-sync) SYNC="0"; shift;;
     --) shift; break;;
     *) break;;
   esac
@@ -123,12 +126,14 @@ if [ $? -ne 0 ]; then
 	echo "Cannot switch to directory $SYS_DIR"
 	exit 1	
 fi
-echo "Synching repositories ... "
-repo sync $JJ 1>/dev/null 2>/dev/null
-status=$?
-if [ $status -ne 0 ]; then
-	echo "repo sync failed"
-	exit 2
+if [ "$SYNC" == 1 ]; then
+	echo "Synching repositories ... "
+	repo sync $JJ 1>/dev/null 2>/dev/null
+	status=$?
+	if [ $status -ne 0 ]; then
+		echo "repo sync failed"
+		exit 2
+	fi
 fi
 
 # Setup build environment
