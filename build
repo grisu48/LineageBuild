@@ -23,6 +23,7 @@ if [ $# -lt 1 ]; then
 
 	echo "Missing parameter: Device to build"
 	echo "Usage: $0 DEVICE"
+	echo "Type $0 --help if you need help"
 	exit 1
 fi
 
@@ -34,13 +35,16 @@ do
 		echo ""
 		echo "Usage: $0 DEVICE|OPTIONS"
 		echo "DEVICE can be: hammerhead, manta, ..."
-		echo "  or another device supported by Lineage)"
+		echo "  (or another device supported by Lineage)"
 		echo ""
 		echo "OPTIONS"
 		echo "  -h   --help       Print this help message"
 		echo "  --init            Initialize repository (don't run this on a working repo)"
 		echo "  --dependencies    List dependencies (Ubuntu 16.04 and later)"
 		echo "  --inst-dep        Install the dependencies"
+		echo ""
+		echo "I've wrote --inst-dep because I'm lazy. You should list the dependencies and install them manually via apt, apt-get or aptitude"
+		echo "  Never trust a script, especially if it asks for sudo rights ;-)"
 		exit 0
 	elif [ "$var" = "--dependencies" ]; then
 		echo "bc bison build-essential curl flex g++-multilib gcc-multilib git gnupg gperf imagemagick lib32ncurses5-dev lib32readline-dev lib32z1-dev libesd0-dev liblz4-tool libncurses5-dev libsdl1.2-dev libssl-dev libwxgtk3.0-dev libxml2 libxml2-utils lzop pngcrush rsync schedtool squashfs-tools xsltproc zip zlib1g-dev"
@@ -49,7 +53,7 @@ do
 		echo "bc bison build-essential curl flex g++-multilib gcc-multilib git gnupg gperf imagemagick lib32ncurses5-dev lib32readline-dev lib32z1-dev libesd0-dev liblz4-tool libncurses5-dev libsdl1.2-dev libssl-dev libwxgtk2.8-dev libxml2 libxml2-utils lzop pngcrush rsync schedtool squashfs-tools xsltproc zip zlib1g-dev"
 		exit 0
 	elif [ "$var" = "--inst-dep" ]; then
-		echo "sudo apt-get install `./$0 --dependencies`"
+		sudo apt-get install `./$0 --dependencies`
 		exit $?
 	elif [ "$var" = "--init" ]; then
 		## Check if repo is already initialized and refuse work if so
