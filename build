@@ -1,17 +1,26 @@
 #!/bin/bash
 # LineageOS build script
 #   2017, Felix Niederwanger <felix@feldspaten.org>
-
+#   https://github.com/grisu48/LineageBuild
+#   Feel free to share and distribute!
 
 
 SYS_DIR="android/system"
-JJ="-j8"		# Number of processes
+JJ="-j8"		# Number of processes for build
 FLAVOUR="cm-14.1"	# Witch Android flavour to use. Default: "cm-14.1"
 
 
 
 ## Check program parameters
 if [ $# -lt 1 ]; then
+
+	## Check for init file
+	if [ ! -f .lineageBuild ]; then
+		echo "This appears to be the first time that you run this script"
+		echo "Use $0 --init to setup the system in the first place"
+		exit 1
+	fi
+
 	echo "Missing parameter: Device to build"
 	echo "Usage: $0 DEVICE"
 	exit 1
@@ -24,33 +33,67 @@ do
 		echo "2017 Felix Niederwanger"
 		echo ""
 		echo "Usage: $0 DEVICE|OPTIONS"
-		echo "DEVICE can be: hammerhead, manta, n8000"
-		echo "  or another device, but they are not supported (yet)"
+		echo "DEVICE can be: hammerhead, manta, ..."
+		echo "  or another device supported by Lineage)"
 		echo ""
 		echo "OPTIONS"
 		echo "  -h   --help       Print this help message"
 		echo "  --init            Initialize repository (don't run this on a working repo)"
+		echo "  --dependencies    List dependencies (Ubuntu 16.04 and later)"
+		echo "  --inst-dep        Install the dependencies"
 		exit 0
+	elif [ "$var" = "--dependencies" ]; then
+		echo "bc bison build-essential curl flex g++-multilib gcc-multilib git gnupg gperf imagemagick lib32ncurses5-dev lib32readline-dev lib32z1-dev libesd0-dev liblz4-tool libncurses5-dev libsdl1.2-dev libssl-dev libwxgtk3.0-dev libxml2 libxml2-utils lzop pngcrush rsync schedtool squashfs-tools xsltproc zip zlib1g-dev"
+		exit 0
+	elif [ "$var" = "--old-dependencies" ]; then
+		echo "bc bison build-essential curl flex g++-multilib gcc-multilib git gnupg gperf imagemagick lib32ncurses5-dev lib32readline-dev lib32z1-dev libesd0-dev liblz4-tool libncurses5-dev libsdl1.2-dev libssl-dev libwxgtk2.8-dev libxml2 libxml2-utils lzop pngcrush rsync schedtool squashfs-tools xsltproc zip zlib1g-dev"
+		exit 0
+	elif [ "$var" = "--inst-dep" ]; then
+		echo "sudo apt-get install `./$0 --dependencies`"
+		exit $?
 	elif [ "$var" = "--init" ]; then
-		## TODO: Check if repo is already initialized and refuse work if so
+		## Check if repo is already initialized and refuse work if so
+		if [ -f .lineageBuild ]; then
+			echo "ERROR: This directory appears to be initialized already"
+			echo "  Remove the file .lineageBuild if you want to force a init"
+			echo "Process cancelled."
+			exit 1
+		fi
+		
 		mkdir -p "$SYS_DIR"
+		CUR_DIR="$PWD"
 		cd "$SYS_DIR"
 		echo "Initializing ... "
-		repo init -u https://github.com/LineageOS/android.git -b $(FLAVOUR)
+		repo init -u https://github.com/LineageOS/android.git -b ${FLAVOUR}
 		if [ $? -ne 0 ]; then
 			echo "Repo init failed."
 			exit 1
 		fi
 		echo "First synchronisation ... "
 		repo sync $JJ 1>/dev/null 2>/dev/null
+		status=$?
 		if [ $status -ne 0 ]; then
 			echo "repo sync failed"
 			exit 2
 		fi
 		echo "Repository initialized"
+		cd "$CUR_DIR"
+		touch .lineageBuild
 		exit 0
 	fi
 done
+
+
+
+## Check for init file
+if [ ! -f .lineageBuild ]; then
+	echo "Hi there,"
+	echo "  This appears to be the first time that you run this script"
+	echo "  Use $0 --init to setup the system in the first place."
+	echo "Have fun, phoenix"
+	exit 1
+fi
+
 
 LOGDIR="$PWD/logs"
 TODAY="`date --iso`"
