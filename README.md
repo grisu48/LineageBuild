@@ -1,6 +1,7 @@
 # LineageBuild
 
 My LineageOS build script. Usage:
+
     ./build DEVICE
 
 I use it to build for hammerhead (Google Nexus 5)
@@ -16,16 +17,21 @@ See the LineageOS wiki for instructions (e.g. for the Nexus 5 device: https://wi
 * Dependencies install
 
 First you need to setup the repository. Type the following to install them directly
+
     ./build --inst-dep
+
 or the following to list the required dependencies.
+
     ./build --dependencies
 
 * Repository initialisation
 
 To setup the repository use the --init command
+
     ./build --init
 
 To synchronize the repositories and build for hammerhead
+
     ./build hammerhead
 
 You can replace hammerhead by your device.
@@ -34,11 +40,8 @@ The files are placed in the android/system/out/target/product/ subfolder
 
 ### In a nutshell
 
-Dependencies install
-    ./build --inst-dep
-Initialize repository
-    ./build --init
-Build for hammerhead
-    ./build hammerhead
+    ./build --inst-dep			# Dependency install (Once)
+    ./build --init			# Initialize repository (Once)
+    ./build hammerhead			# Build for hammerhead
 
 
