@@ -98,9 +98,9 @@ eval set -- "${OPTS}"
 while true; do
   case "${1}" in
     -h | --help) usage; exit 0; shift ;;
-    --dependencies) print_dep ; exit 0; shift ;;
-    --old-dependencies) print_dep 1; exit 0; shift ;;
-    --inst-dep) install_dep; exit ${?}; shift;;
+    --dependencies) print_deps ; exit 0; shift ;;
+    --old-dependencies) print_deps 1; exit 0; shift ;;
+    --inst-dep) install_deps; exit ${?}; shift;;
     --init) init_run; exit ${?}; shift;;
     --no-sync) SYNC="0"; shift;;
     --) shift; break;;
