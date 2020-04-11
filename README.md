@@ -2,21 +2,26 @@
 
 My LineageOS build script. Usage:
 
-    ./build DEVICE
+    ## First setup the repository
+    # ./build --inst-dep            # Install dependencies (Ubuntu 18.04)
+    # ./build --init
+    
+    ## Trigger build
+    $ ./build DEVICE
 
-I use it to build for hammerhead (Google Nexus 5)
+I used it to build for hammerhead (Google Nexus 5)
 
 ## System requirements
 
-This script is developed for Ubuntu 16.04 (and later). Older versions may work, but you may need to setup the toolchain manually.
+This script is developed for Ubuntu 18.04. It worked well on Ubuntu 16.04, older version may need to setup the toolchain manually.
 
-See the LineageOS wiki for instructions (e.g. for the Nexus 5 device: https://wiki.lineageos.org/devices/hammerhead/build)
+See the LineageOS wiki for instructions (e.g. for the [Samsung Galaxy S7](https://wiki.lineageos.org/devices/herolte/build) or the [Nexus 5](https://wiki.lineageos.org/devices/hammerhead/build))
 
-The build script is currently hardcoded to only work for 14.1. You can try other versions by changing the FLAVOUR variable in the script.
+The build script is hardcoded to only work for 14.1. You can try other versions by changing the FLAVOUR variable in the script.
 
-## Usage
+## Usage / Build recipe
 
-* Dependencies install
+**Dependencies install**
 
 First you need to setup the repository. Type the following to install them directly
 
@@ -26,7 +31,7 @@ or the following to list the required dependencies.
 
     ./build --dependencies
 
-* Repository initialisation
+**Repository initialisation**
 
 To initialize the repository use the --init command.
 
@@ -34,7 +39,7 @@ To initialize the repository use the --init command.
 
 This step should only be done once and the script warns you if you are trying to initialize it again.
 
-* Build for a device (e.g. hammerhead)
+**Build for a device (e.g. hammerhead)**
 
 To synchronize the repositories and build for hammerhead
 
@@ -52,9 +57,7 @@ The files are placed in the android/system/out/target/product/ subfolder
 
 # Disclaimer
 
-You are free to use, share, modify or even print this script without any restrictions but keep in mind that it comes with ABSOLUTELY NO WARRANTY.
-
-Use at own risk.
+You are free to use, share, modify or even print this script without any restrictions but keep in mind that it comes with ABSOLUTELY NO WARRANTY. Use at own risk. Have fun.
 
 If you find it useful, please share!
 
