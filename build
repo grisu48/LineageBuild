@@ -10,9 +10,7 @@ JJ="-j8"		# Number of processes for build
 FLAVOUR="cm-14.1"	# Witch Android flavour to use. Default: "cm-14.1"
 SYNC="1"
 
-DEBIAN_DEPS="bc bison build-essential curl flex g++-multilib gcc-multilib git gnupg gperf imagemagick lib32ncurses5-dev lib32readline-dev lib32z1-dev libesd0-dev liblz4-tool libncurses5-dev libsdl1.2-dev libssl-dev libwxgtk3.0-dev libxml2 libxml2-utils lzop pngcrush rsync schedtool squashfs-tools xsltproc zip zlib1g-dev"
-
-DEBIAN_OLD_DEPS="bc bison build-essential curl flex g++-multilib gcc-multilib git gnupg gperf imagemagick lib32ncurses5-dev lib32readline-dev lib32z1-dev libesd0-dev liblz4-tool libncurses5-dev libsdl1.2-dev libssl-dev libwxgtk2.8-dev libxml2 libxml2-utils lzop pngcrush rsync schedtool squashfs-tools xsltproc zip zlib1g-dev"
+DEBIAN_DEPS="bc bison build-essential ccache curl flex g++-multilib gcc-multilib git gnupg gperf imagemagick lib32ncurses5-dev lib32readline-dev lib32z1-dev liblz4-tool libncurses5 libncurses5-dev libsdl1.2-dev libssl-dev libxml2 libxml2-utils lzop pngcrush rsync schedtool squashfs-tools xsltproc zip zlib1g-dev"
 
 function checkFirstTime() {
   [[ -f .lineageBuild ]] && return 0
@@ -33,23 +31,24 @@ DEVICE can be: hammerhead, manta, ...
 OPTIONS
   -h   --help       Print this help message
   --init            Initialize repository (don't run this on a working repo)
-  --dependencies    List dependencies (Ubuntu 16.04 and later)
+  --dependencies    List dependencies (Ubuntu 20.04)
   --inst-dep        Install the dependencies
   --no-sync         Do not sync before building
 
 I've wrote --inst-dep because I'm lazy. You should list the dependencies and install them manually via apt, apt-get or aptitude
-  Never trust a script, especially if it asks for sudo rights ;-)
+  I'm a random dude from the internet, why should you trust me? :-)
 
 LineageOS build script
-2017 Felix Niederwanger
+2020 Felix Niederwanger
 __EOU
 }
 
 function print_deps() {
-  local old_deps=${1:-0}
-  DEPS="${DEBIAN_DEPS}"
-  [[ ${old_deps} == 1 ]] && DEPS="${DEBIAN_OLD_DEPS}"
-  echo ${DEPS}
+  echo "${DEBIAN_DEPS}"
+  echo ""
+  echo "Additional for older builds"
+  echo "  Lineage 11-13:     openjdk-7-jdk"
+  echo "  Lineage 14.1-15.1  openjdk-8-jdk"
   exit 0
 }
 
@@ -59,7 +58,12 @@ function install_deps() {
 }
 
 function init_run() {
-
+  flavor="${1:$FLAVOR}"
+  if [[ "$flavor" == "" ]]; then
+	echo "Error: no flavor set"
+	return 1
+  fi
+  
   ## Check if repo is already initialized and refuse work if so
   if [[ -f .lineageBuild ]]; then
           echo "ERROR: This directory appears to be initialized already"
@@ -99,7 +103,6 @@ while true; do
   case "${1}" in
     -h | --help) usage; exit 0; shift ;;
     --dependencies) print_deps ; exit 0; shift ;;
-    --old-dependencies) print_deps 1; exit 0; shift ;;
     --inst-dep) install_deps; exit ${?}; shift;;
     --init) init_run; exit ${?}; shift;;
     --no-sync) SYNC="0"; shift;;
@@ -123,7 +126,7 @@ mkdir -p "$LOGDIR"
 ## Sync repositories
 cd "$SYS_DIR"
 if [ $? -ne 0 ]; then
-	echo "Cannot switch to directory $SYS_DIR"
+	echo "Cannot change directory $SYS_DIR"
 	exit 1	
 fi
 if [ "$SYNC" == 1 ]; then
@@ -144,9 +147,9 @@ export USE_CCACHE=1
 export CCACHE_COMPRESS=1
 
 # Setup android JACK"
-export ANDROID_JACK_VM_ARGS="-Dfile.encoding=UTF-8 -XX:+TieredCompilation -Xmx12G"
+export ANDROID_JACK_VM_ARGS="-Dfile.encoding=UTF-8 -XX:+TieredCompilation -Xmx4G"
 
-## Iterate over devices
+# Iterate over devices
 for var in "$@"
 do
 	echo "Building for device $var ... "
@@ -176,6 +179,6 @@ do
 		echo "Check log files $OUT and $ERR for details"
 		exit 5
 	fi
-        echo "Completed build for $var :-)"
+        echo "Completed build for $var"
 done
 

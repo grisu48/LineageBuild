@@ -4,13 +4,14 @@ My LineageOS build script. Usage:
 
     ./build DEVICE
 
-I use it to build for hammerhead (Google Nexus 5)
+I used it to build for hammerhead (Google Nexus 5)
 
 ## System requirements
 
-This script is developed for Ubuntu 16.04 (and later). Older versions may work, but you may need to setup the toolchain manually.
+This script is developed for Ubuntu 16.04 and updated for Ubuntu 20.04. Older versions may work, but you may need to setup the toolchain manually.
+I'm using Ubuntu (Server), as this is the recommendation from the LineageOS Wiki.
 
-See the LineageOS wiki for instructions (e.g. for the Nexus 5 device: https://wiki.lineageos.org/devices/hammerhead/build)
+See the LineageOS wiki for instructions (e.g. for [Nexus 5](https://wiki.lineageos.org/devices/hammerhead/build))
 
 The build script is currently hardcoded to only work for 14.1. You can try other versions by changing the FLAVOUR variable in the script.
 
@@ -52,10 +53,6 @@ The files are placed in the android/system/out/target/product/ subfolder
 
 # Disclaimer
 
-You are free to use, share, modify or even print this script without any restrictions but keep in mind that it comes with ABSOLUTELY NO WARRANTY.
-
-Use at own risk.
+You are free to use, share, modify or even print this script without any restrictions but keep in mind that it comes with ABSOLUTELY NO WARRANTY. Use at own risk.
 
 If you find it useful, please share!
-
-
